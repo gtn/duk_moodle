@@ -164,6 +164,10 @@ function quiz_start_new_attempt($quizobj, $quba, $attempt, $attemptnumber, $time
     $qubaids = new \mod_quiz\question\qubaids_for_users_attempts(
             $quizobj->get_quizid(), $attempt->userid);
 
+    // [gtn]
+    $GLOBALS['gtn_quizobj'] =  $quizobj;
+    // [/gtn]
+
     // Fully load all the questions in this quiz.
     $quizobj->preload_questions();
     $quizobj->load_questions();

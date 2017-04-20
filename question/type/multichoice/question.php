@@ -56,10 +56,50 @@ abstract class qtype_multichoice_base extends question_graded_automatically {
     protected $order = null;
 
     public function start_attempt(question_attempt_step $step, $variant) {
-        $this->order = array_keys($this->answers);
+		$this->order = array_keys($this->answers);
         if ($this->shuffleanswers) {
             shuffle($this->order);
         }
+
+        // [gtn]
+        /* @var quiz $quiz */
+        $quiz = $GLOBALS['gtn_quizobj'];
+		$maxAnswerCount = $quiz->get_quiz()->maxanswercount;
+
+		if ($maxAnswerCount >= 2) {
+			$random_answers = $this->order;
+			// always check in random order
+			shuffle($random_answers);
+
+			// TODO: anzahl vom quiz auslesen, wie?
+
+			foreach ($random_answers as $key=>$answerid) {
+				if (count($random_answers) - $maxAnswerCount <= 0) {
+					break;
+				}
+
+				// still too many, try to delete
+				$answer = $this->answers[$answerid];
+
+				if ($answer->fraction > 0) {
+					// a right answer can't be deleted
+					continue;
+				}
+
+				unset($random_answers[$key]);
+			}
+
+			/*
+			var_dump($random_answers);
+			var_dump($this->order);
+			var_dump(array_values(array_intersect($this->order, $random_answers)));
+			exit;
+			*/
+
+			$this->order = array_values(array_intersect($this->order, $random_answers));
+		}
+		// [/gtn]
+
         $step->set_qt_var('_order', implode(',', $this->order));
     }
 

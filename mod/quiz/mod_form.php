@@ -194,6 +194,32 @@ class mod_quiz_mod_form extends moodleform_mod {
         $mform->addHelpButton('preferredbehaviour', 'howquestionsbehave', 'question');
         $mform->setDefault('preferredbehaviour', $quizconfig->preferredbehaviour);
 
+        // [gtn]
+        // add field if not exists
+        global $DB;
+        $dbman = $DB->get_manager();
+
+        $table = new xmldb_table('quiz');
+        $field = new xmldb_field('maxanswercount', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        // Conditionally launch add field latest.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // option
+        $options = [
+        	0 => 'kein Limit',
+			2 => '2 Antworten',
+			3 => '3 Antworten',
+			4 => '4 Antworten',
+			5 => '5 Antworten',
+			6 => '6 Antworten',
+		];
+        $mform->addElement('select', 'maxanswercount',
+                'Maximal Anzahl von Antworten bei MC-Fragen', $options);
+        // [/gtn]
+
         // Can redo completed questions.
         $redochoices = array(0 => get_string('no'), 1 => get_string('canredoquestionsyes', 'quiz'));
         $mform->addElement('select', 'canredoquestions', get_string('canredoquestions', 'quiz'), $redochoices);
