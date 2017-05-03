@@ -62,41 +62,43 @@ abstract class qtype_multichoice_base extends question_graded_automatically {
         }
 
         // [gtn]
-        /* @var quiz $quiz */
-        $quiz = $GLOBALS['gtn_quizobj'];
-		$maxAnswerCount = $quiz->get_quiz()->maxanswercount;
+		if (isset($GLOBALS['gtn_quizobj'])) {
+			/* @var quiz $quiz */
+			$quiz = $GLOBALS['gtn_quizobj'];
+			$maxAnswerCount = $quiz->get_quiz()->maxanswercount;
 
-		if ($maxAnswerCount >= 2) {
-			$random_answers = $this->order;
-			// always check in random order
-			shuffle($random_answers);
+			if ($maxAnswerCount >= 2) {
+				$random_answers = $this->order;
+				// always check in random order
+				shuffle($random_answers);
 
-			// TODO: anzahl vom quiz auslesen, wie?
+				// TODO: anzahl vom quiz auslesen, wie?
 
-			foreach ($random_answers as $key=>$answerid) {
-				if (count($random_answers) - $maxAnswerCount <= 0) {
-					break;
+				foreach ($random_answers as $key => $answerid) {
+					if (count($random_answers) - $maxAnswerCount <= 0) {
+						break;
+					}
+
+					// still too many, try to delete
+					$answer = $this->answers[$answerid];
+
+					if ($answer->fraction > 0) {
+						// a right answer can't be deleted
+						continue;
+					}
+
+					unset($random_answers[$key]);
 				}
 
-				// still too many, try to delete
-				$answer = $this->answers[$answerid];
+				/*
+				var_dump($random_answers);
+				var_dump($this->order);
+				var_dump(array_values(array_intersect($this->order, $random_answers)));
+				exit;
+				*/
 
-				if ($answer->fraction > 0) {
-					// a right answer can't be deleted
-					continue;
-				}
-
-				unset($random_answers[$key]);
+				$this->order = array_values(array_intersect($this->order, $random_answers));
 			}
-
-			/*
-			var_dump($random_answers);
-			var_dump($this->order);
-			var_dump(array_values(array_intersect($this->order, $random_answers)));
-			exit;
-			*/
-
-			$this->order = array_values(array_intersect($this->order, $random_answers));
 		}
 		// [/gtn]
 
