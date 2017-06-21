@@ -67,37 +67,34 @@ abstract class qtype_multichoice_base extends question_graded_automatically {
 			$quiz = $GLOBALS['gtn_quizobj'];
 			$maxAnswerCount = $quiz->get_quiz()->maxanswercount;
 
-			if ($maxAnswerCount >= 2) {
+			if ($maxAnswerCount >= 2 && count($this->order) > $maxAnswerCount) {
 				$random_answers = $this->order;
+
+				foreach ($random_answers as $key => $answerid) {
+					$answer = $this->answers[$answerid];
+					echo "$answerid -> $answer->fraction\n";
+				}
+
 				// always check in random order
 				shuffle($random_answers);
 
-				// TODO: anzahl vom quiz auslesen, wie?
+				$final_random_answers = [];
 
+				// get first correct answer (so we have at least one correct answer)
 				foreach ($random_answers as $key => $answerid) {
-					if (count($random_answers) - $maxAnswerCount <= 0) {
-						break;
-					}
-
-					// still too many, try to delete
 					$answer = $this->answers[$answerid];
 
 					if ($answer->fraction > 0) {
-						// a right answer can't be deleted
-						continue;
+						$final_random_answers[] = $answerid;
+						unset($random_answers[$key]);
+						break;
 					}
-
-					unset($random_answers[$key]);
 				}
 
-				/*
-				var_dump($random_answers);
-				var_dump($this->order);
-				var_dump(array_values(array_intersect($this->order, $random_answers)));
-				exit;
-				*/
+				$final_random_answers = array_merge($final_random_answers, array_slice($random_answers, 0, $maxAnswerCount - count($final_random_answers)));
 
-				$this->order = array_values(array_intersect($this->order, $random_answers));
+				shuffle($final_random_answers);
+				$this->order = $final_random_answers;
 			}
 		}
 		// [/gtn]
@@ -125,6 +122,30 @@ abstract class qtype_multichoice_base extends question_graded_automatically {
             $this->answers[$ansid] = $this->qtype->make_answer($a);
             $this->answers[$ansid]->answerformat = FORMAT_HTML;
         }
+
+        // [gtn]
+		$anzahl_richtig = 0;
+        foreach ($this->order as $ansid) {
+			$answer = $this->answers[$ansid];
+
+			if ($answer->fraction > 0) {
+				$anzahl_richtig++;
+			}
+		}
+
+		// prozentwerte von antworten neu berechnen
+        foreach ($this->order as $ansid) {
+			$answer = $this->answers[$ansid];
+
+			if ($answer->fraction > 0) {
+				// richtige antworten bekommen 1 / anzahl prozent. z.b. 2 richtige antworten bekommen jeweils 50%
+				$answer->fraction = 1 / $anzahl_richtig;
+			} else {
+				// falsche antworten bekommen die gleichen prozent aber als abzug
+				$answer->fraction = -1 / $anzahl_richtig;
+			}
+		}
+        // [/gtn]
     }
 
     public function get_question_summary() {
