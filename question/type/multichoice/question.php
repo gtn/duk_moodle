@@ -72,7 +72,6 @@ abstract class qtype_multichoice_base extends question_graded_automatically {
 
 				foreach ($random_answers as $key => $answerid) {
 					$answer = $this->answers[$answerid];
-					echo "$answerid -> $answer->fraction\n";
 				}
 
 				// always check in random order
