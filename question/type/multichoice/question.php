@@ -62,17 +62,13 @@ abstract class qtype_multichoice_base extends question_graded_automatically {
         }
 
         // [gtn]
-		if (isset($GLOBALS['gtn_quizobj'])) {
+		if ($this instanceof qtype_multichoice_multi_question && isset($GLOBALS['gtn_quizobj'])) {
 			/* @var quiz $quiz */
 			$quiz = $GLOBALS['gtn_quizobj'];
 			$maxAnswerCount = $quiz->get_quiz()->maxanswercount;
 
 			if ($maxAnswerCount >= 2 && count($this->order) > $maxAnswerCount) {
 				$random_answers = $this->order;
-
-				foreach ($random_answers as $key => $answerid) {
-					$answer = $this->answers[$answerid];
-				}
 
 				// always check in random order
 				shuffle($random_answers);
@@ -94,6 +90,8 @@ abstract class qtype_multichoice_base extends question_graded_automatically {
 
 				shuffle($final_random_answers);
 				$this->order = $final_random_answers;
+
+		        $step->set_qt_var('_gtn_version', '2017062700');
 			}
 		}
 		// [/gtn]
@@ -123,25 +121,27 @@ abstract class qtype_multichoice_base extends question_graded_automatically {
         }
 
         // [gtn]
-		$anzahl_richtig = 0;
-        foreach ($this->order as $ansid) {
-			$answer = $this->answers[$ansid];
+		if ($this instanceof qtype_multichoice_multi_question && $step->get_qt_var('_gtn_version') === '2017062700') {
+			$anzahl_richtig = 0;
+			foreach ($this->order as $ansid) {
+				$answer = $this->answers[$ansid];
 
-			if ($answer->fraction > 0) {
-				$anzahl_richtig++;
+				if ($answer->fraction > 0) {
+					$anzahl_richtig++;
+				}
 			}
-		}
 
-		// prozentwerte von antworten neu berechnen
-        foreach ($this->order as $ansid) {
-			$answer = $this->answers[$ansid];
+			// prozentwerte von antworten neu berechnen
+			foreach ($this->order as $ansid) {
+				$answer = $this->answers[$ansid];
 
-			if ($answer->fraction > 0) {
-				// richtige antworten bekommen 1 / anzahl prozent. z.b. 2 richtige antworten bekommen jeweils 50%
-				$answer->fraction = 1 / $anzahl_richtig;
-			} else {
-				// falsche antworten bekommen die gleichen prozent aber als abzug
-				$answer->fraction = -1 / $anzahl_richtig;
+				if ($answer->fraction > 0) {
+					// richtige antworten bekommen 1 / anzahl prozent. z.b. 2 richtige antworten bekommen jeweils 50%
+					$answer->fraction = 1 / $anzahl_richtig;
+				} else {
+					// falsche antworten bekommen die gleichen prozent aber als abzug
+					$answer->fraction = -1 / $anzahl_richtig;
+				}
 			}
 		}
         // [/gtn]
