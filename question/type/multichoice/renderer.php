@@ -275,8 +275,14 @@ class qtype_multichoice_multi_renderer extends qtype_multichoice_renderer_base {
     public function correct_response(question_attempt $qa) {
         $question = $qa->get_question();
 
+		$order = $question->get_order($qa);
+
         $right = array();
         foreach ($question->answers as $ansid => $ans) {
+        	if (!in_array($ansid, $order)) {
+        		// also check if answer is in random selected answers
+        		continue;
+			}
             if ($ans->fraction > 0) {
                 $right[] = $question->make_html_inline($question->format_text($ans->answer, $ans->answerformat,
                         $qa, 'question', 'answer', $ansid));
